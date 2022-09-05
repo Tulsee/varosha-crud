@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 // load user Model
@@ -16,12 +17,13 @@ const keys = require('../../config/mongoURI').secretOrKey;
 router.get('/test', (req, res) => {
   res.json({
     msg: 'Running /api/users/test',
-    register: '/api/user/register',
+    register: '/api/users/register',
+    login: '/api/users/login',
   });
 });
 
 /**
- * @route   GET api/users/register
+ * @route   POST api/users/register
  * @dec     register user route
  * @access  Public
  */
@@ -52,6 +54,54 @@ router.post('/register', (req, res) => {
         });
       });
     }
+  });
+});
+
+/**
+ * @route   POST api/users/login
+ * @dec     Login user route / returing jwt token
+ * @access   Public
+ */
+router.post('/login', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // finding user by their email
+  User.findOne({
+    email: email,
+  }).then((user) => {
+    if (!user) {
+      error = 'USER not Found with this email';
+      return res.status(404).json({ error: error });
+    }
+    // checking password
+    bcrypt.compare(password, user.password).then((isMatch) => {
+      if (isMatch) {
+        //password matched
+        const payload = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        };
+        jwt.sign(
+          payload,
+          keys,
+          {
+            expiresIn: 36000,
+          },
+          (err, token) => {
+            res.json({
+              success: true,
+              token: 'Bearer ' + token,
+            });
+          }
+        );
+      } else {
+        // password not matched
+        error = 'password is Incorrect';
+        return res.status(400).json({ error: error });
+      }
+    });
   });
 });
 
