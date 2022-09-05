@@ -11,12 +11,21 @@ const Post = require('../../models/Post');
  * @access   Public
  */
 router.get('/', (req, res) => {
-  Post.find()
-    .sort({
-      date: -1,
-    })
-    .then((posts) => res.json(posts))
-    .catch((err) => res.status(404).json({ error: 'no post found' }));
+  // destructuring page and limit and set default values
+  const { page = 1, limit = 10 } = req.query;
+  Post.count({}, function (err, count) {
+    Post.find()
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .then((posts) => {
+        res.status(200).json({
+          posts,
+          count,
+          totalPages: Math.ceil(count / limit),
+          currentPage: page,
+        });
+      });
+  });
 });
 
 /**
