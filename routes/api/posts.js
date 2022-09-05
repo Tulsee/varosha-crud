@@ -70,4 +70,29 @@ router.delete(
   }
 );
 
+/**
+ * @route   PUT api/posts/:id
+ * @dec     update posts of related id
+ * @access   Private
+ */
+
+router.put(
+  '/:id',
+  passport.authenticate('jwt', {
+    session: false,
+  }),
+  (req, res) => {
+    Post.findById(req.params.id).then((post) => {
+      if (post.user.toString() !== req.user.id) {
+        return res
+          .status(401)
+          .json({ error: 'this user is not authorized yo update this post' });
+      } else
+        (post.text = req.body.text),
+          (post.title = req.body.title),
+          post.save().then((post) => res.json(post));
+    });
+  }
+);
+
 module.exports = router;
