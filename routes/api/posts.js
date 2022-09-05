@@ -41,4 +41,33 @@ router.post(
   }
 );
 
+/**
+ * @route   DELETE api/posts/:id
+ * @dec     delete posts of related id
+ * @access   Private
+ */
+router.delete(
+  '/:id',
+  passport.authenticate('jwt', {
+    session: false,
+  }),
+  (req, res) => {
+    Post.findById(req.params.id)
+      .then((post) => {
+        // check for post owner
+        if (post.user.toString() !== req.user.id) {
+          return res
+            .status(401)
+            .json({ error: 'User is not owner of this post' });
+        }
+        // delete
+        post
+          .remove()
+          .then(() => res.json({ success: true }))
+          .catch((err) => res.status(404).json({ error: err }));
+      })
+      .catch((err) => res.status(404).json({ error: err }));
+  }
+);
+
 module.exports = router;
