@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 const router = express.Router();
 
 // load user Model
@@ -14,11 +15,12 @@ const keys = require('../../config/mongoURI').secretOrKey;
  * @dec    Tests user route
  * @access  Public
  */
-router.get('/test', (req, res) => {
+router.get('', (req, res) => {
   res.json({
     msg: 'Running /api/users/test',
     register: '/api/users/register',
     login: '/api/users/login',
+    current: '/api/users/current',
   });
 });
 
@@ -104,5 +106,22 @@ router.post('/login', (req, res) => {
     });
   });
 });
+
+//@route    GET api/users/current
+//@dec      Return current user
+//@access   Private
+router.get(
+  '/current',
+  passport.authenticate('jwt', {
+    session: false,
+  }),
+  (req, res) => {
+    res.json({
+      id: req.user.id,
+      name: req.user.name,
+      email: req.user.email,
+    });
+  }
+);
 
 module.exports = router;

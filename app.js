@@ -5,6 +5,7 @@ const passport = require('passport');
 const app = express();
 
 const users = require('./routes/api/users');
+const posts = require('./routes/api/posts');
 
 // middleware for body-parser
 app.use(
@@ -25,8 +26,15 @@ mongoose
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.log(err));
 
+// middleware for passport
+app.use(passport.initialize());
+
+// passport config
+require('./config/passport')(passport);
+
 // use Routes
 app.use('/api/users', users);
+app.use('/api/posts', posts);
 
 const PORT = process.env.PORT || 2000;
 app.listen(PORT, () => {
