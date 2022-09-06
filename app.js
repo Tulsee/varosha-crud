@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const app = express();
 
-const users = require('./routes/api/users');
-const posts = require('./routes/api/posts');
+const postRoutes = require('./routes/api/posts');
+const userRoutes = require('./routes/api/users');
 
 // middleware for body-parser
 app.use(
@@ -17,6 +17,8 @@ app.use(bodyParser.json());
 
 // load config
 const db = require('./config/mongoURI').mongoURI;
+require('./models/Post');
+require('./models/User');
 
 // connection to mongoDB
 mongoose
@@ -33,8 +35,8 @@ app.use(passport.initialize());
 require('./config/passport')(passport);
 
 // use Routes
-app.use('/api/users', users);
-app.use('/api/posts', posts);
+app.use('/api/v1/post', postRoutes);
+app.use('/api/v1/user', userRoutes);
 
 const PORT = process.env.PORT || 2000;
 app.listen(PORT, () => {
