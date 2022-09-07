@@ -1,12 +1,11 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const passport = require('passport');
 
 // load user Model
 const User = require('../models/User');
 
 // load keys
-const keys = require('../config/mongoURI').secretOrKey;
+const { secretOrKey } = require('../config');
 
 /**
  * @route GET api/users/test
@@ -93,7 +92,7 @@ exports.login_user = (req, res) => {
         };
         jwt.sign(
           payload,
-          keys,
+          secretOrKey,
           {
             expiresIn: 36000,
           },
