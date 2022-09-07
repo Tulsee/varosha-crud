@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { authSchema, registerSchema } = require('../helpers');
 
 // load user Model
 const User = require('../models/User');
@@ -35,33 +36,34 @@ exports.get_user_api = function (req, res) {
  * @access  Public
  */
 exports.register_user = function (req, res) {
-  User.findOne({
-    email: req.body.email,
-  }).then((user) => {
-    if (user) {
-      errors = 'Email already exist';
-      return res.status(400).json({ error: errors });
-    } else {
-      const newUser = new User({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-      });
-      bcrypt.genSalt(10, (err, salt) => {
-        bcrypt.hash(newUser.password, salt, (err, hash) => {
-          newUser.password = hash;
-          if (err) throw err;
-          newUser
-            .save()
-            .then((user) => res.json(user))
-            .catch((err) => {
-              console.log(err);
-            });
-          res.json(newUser);
+  let { value, error } = registerSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json(error);
+  } else {
+    User.findOne({
+      email: value.email,
+    }).then((user) => {
+      if (user) {
+        errors = 'Email already exist';
+        return res.status(400).json({ error: errors });
+      } else {
+        const newUser = new User(value);
+        bcrypt.genSalt(10, (err, salt) => {
+          bcrypt.hash(newUser.password, salt, (err, hash) => {
+            newUser.password = hash;
+            if (err) throw err;
+            newUser
+              .save()
+              .then((user) => res.json(user))
+              .catch((err) => {
+                console.log(err);
+              });
+            res.json(newUser);
+          });
         });
-      });
-    }
-  });
+      }
+    });
+  }
 };
 
 /**
@@ -70,46 +72,48 @@ exports.register_user = function (req, res) {
  * @access   Public
  */
 exports.login_user = (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  console.log(req.body);
+  let { value, error } = authSchema.validate(req.body);
   // finding user by their email
-  User.findOne({
-    email: email,
-  }).then((user) => {
-    if (!user) {
-      error = 'USER not Found with this email';
-      return res.status(404).json({ error: error });
-    }
-    // checking password
-    bcrypt.compare(password, user.password).then((isMatch) => {
-      if (isMatch) {
-        //password matched
-        const payload = {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        };
-        jwt.sign(
-          payload,
-          secretOrKey,
-          {
-            expiresIn: 36000,
-          },
-          (err, token) => {
-            res.json({
-              success: true,
-              token: token,
-            });
-          }
-        );
-      } else {
-        // password not matched
-        error = 'password is Incorrect';
-        return res.status(400).json({ error: error });
+  if (error) {
+    return res.status(400).json(error);
+  } else {
+    User.findOne({
+      email: value.email,
+    }).then((user) => {
+      if (!user) {
+        error = 'USER not Found with this email';
+        return res.status(404).json({ error: error });
       }
+      // checking password
+      bcrypt.compare(value.password, user.password).then((isMatch) => {
+        if (isMatch) {
+          //password matched
+          const payload = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+          };
+          jwt.sign(
+            payload,
+            secretOrKey,
+            {
+              expiresIn: 36000,
+            },
+            (err, token) => {
+              res.json({
+                success: true,
+                token: token,
+              });
+            }
+          );
+        } else {
+          // password not matched
+          error = 'password is Incorrect';
+          return res.status(400).json({ error: error });
+        }
+      });
     });
-  });
+  }
 };
 
 //@route    GET api/users/current
