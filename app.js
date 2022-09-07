@@ -8,11 +8,7 @@ const postRoutes = require('./routes/api/posts');
 const userRoutes = require('./routes/api/users');
 
 // middleware for body-parser
-app.use(
-  bodyParser.urlencoded({
-    extended: false,
-  })
-);
+
 app.use(bodyParser.json());
 
 // load config

@@ -73,7 +73,7 @@ exports.register_user = function (req, res) {
 exports.login_user = (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
+  console.log(req.body);
   // finding user by their email
   User.findOne({
     email: email,
@@ -100,7 +100,7 @@ exports.login_user = (req, res) => {
           (err, token) => {
             res.json({
               success: true,
-              token: 'Bearer ' + token,
+              token: token,
             });
           }
         );
@@ -116,14 +116,11 @@ exports.login_user = (req, res) => {
 //@route    GET api/users/current
 //@dec      Return current user
 //@access   Private
-exports.get_current_user_detail =
-  (passport.authenticate('jwt', {
-    session: false,
-  }),
-  (req, res) => {
-    res.json({
-      id: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-    });
+exports.get_current_user_detail = (req, res) => {
+  console.log(req.headers);
+  res.json({
+    id: req.user.id,
+    name: req.user.name,
+    email: req.user.email,
   });
+};

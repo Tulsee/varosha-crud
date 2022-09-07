@@ -48,47 +48,39 @@ exports.get_posts = (req, res) => {
  * @dec     Create posts
  * @access   Private
  */
-exports.create_post =
-  (passport.authenticate('jwt', {
-    session: false,
-  }),
-  (req, res) => {
-    console.log(req.user);
-    const newPost = new Post({
-      text: req.body.text,
-      title: req.body.title,
-      user: req.user.id,
-    });
-    // res.json(newPost);
-    newPost.save().then((post) => res.json(post));
+exports.create_post = (req, res) => {
+  console.log(req.user);
+  const newPost = new Post({
+    text: req.body.text,
+    title: req.body.title,
+    user: req.user.id,
   });
+  // res.json(newPost);
+  newPost.save().then((post) => res.json(post));
+};
 
 /**
  * @route   DELETE api/posts/:id
  * @dec     delete posts of related id
  * @access   Private
  */
-exports.delete_post =
-  (passport.authenticate('jwt', {
-    session: false,
-  }),
-  (req, res) => {
-    Post.findById(req.params.id)
-      .then((post) => {
-        // check for post owner
-        if (post.user.toString() !== req.user.id) {
-          return res
-            .status(401)
-            .json({ error: 'User is not owner of this post' });
-        }
-        // delete
-        post
-          .remove()
-          .then(() => res.json({ success: true }))
-          .catch((err) => res.status(404).json({ error: err }));
-      })
-      .catch((err) => res.status(404).json({ error: err }));
-  });
+exports.delete_post = (req, res) => {
+  Post.findById(req.params.id)
+    .then((post) => {
+      // check for post owner
+      if (post.user.toString() !== req.user.id) {
+        return res
+          .status(401)
+          .json({ error: 'User is not owner of this post' });
+      }
+      // delete
+      post
+        .remove()
+        .then(() => res.json({ success: true }))
+        .catch((err) => res.status(404).json({ error: err }));
+    })
+    .catch((err) => res.status(404).json({ error: err }));
+};
 
 /**
  * @route   PUT api/posts/:id
@@ -96,19 +88,17 @@ exports.delete_post =
  * @access   Private
  */
 
-exports.update_post =
-  (passport.authenticate('jwt', {
-    session: false,
-  }),
-  (req, res) => {
-    Post.findById(req.params.id).then((post) => {
-      if (post.user.toString() !== req.user.id) {
-        return res
-          .status(401)
-          .json({ error: 'this user is not authorized yo update this post' });
-      } else
-        (post.text = req.body.text),
-          (post.title = req.body.title),
-          post.save().then((post) => res.json(post));
-    });
+exports.update_post = function (req, res) {
+  Post.findById(req.params.id).then((post) => {
+    if (post.user.toString() !== req.user.id) {
+      return res
+        .status(401)
+        .json({ error: 'this user is not authorized yo update this post' });
+    } else {
+      const { text, title } = req.body;
+      if (text) post.text = text;
+      if (title) post.title = title;
+      post.save().then((post) => res.status(200).json(post));
+    }
   });
+};
