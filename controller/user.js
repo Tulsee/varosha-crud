@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fileUpload = require('express-fileupload');
 const { authSchema, registerSchema } = require('../helpers');
 
 // load user Model
@@ -125,5 +126,23 @@ exports.get_current_user_detail = (req, res) => {
     id: req.user.id,
     name: req.user.name,
     email: req.user.email,
+  });
+};
+
+/**
+ * @route     POST api/v1/user/fileupload
+ * @dec       Upload files
+ * @access    Public
+ */
+exports.upload_file = (req, res) => {
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).json({ error: 'No files were uploaded.' });
+  }
+  let sampleFile = req.files.sampleFile;
+
+  let uploadPath = 'public/' + sampleFile.name;
+  sampleFile.mv(uploadPath, (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ detail: 'File uploaded' });
   });
 };

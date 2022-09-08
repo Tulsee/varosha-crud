@@ -12,6 +12,7 @@ router
     '/current',
     passport.authenticate('jwt', { session: false }),
     userController.get_current_user_detail
-  );
+  )
+  .post('/upload', userController.upload_file);
 
 module.exports = router;
